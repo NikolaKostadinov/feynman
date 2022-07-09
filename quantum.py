@@ -1,5 +1,22 @@
 import math
 import complex
+from complex import Complex
+import complexmatrix
+from complexmatrix import CompexMatrix
+
+HBAR = 1
+hbar = complex.ToComplex(HBAR)
+halfhbar = complex.ToComplex(.5 * HBAR)
+
+pauliX = CompexMatrix([ [complex.zero, complex.one], [complex.one, complex.zero] ])
+pauliY = CompexMatrix([ [complex.zero, complex.i], [-complex.i, complex.zero] ])
+pauliZ = CompexMatrix([ [complex.one, complex.zero], [complex.zero, -complex.one] ])
+
+spinX = pauliX.scale(halfhbar)
+spinY = pauliY.scale(halfhbar)
+spinZ = pauliZ.scale(halfhbar)
+
+hadamard = CompexMatrix([ [complex.one, complex.one], [complex.one, -complex.one] ]).scale(complex.roothalf)
 
 class WaveFunction:
     
@@ -20,12 +37,12 @@ class WaveFunction:
             
         return self
     
-    def __init__(self, _probabilityAmplitudes, _basis):
+    def __init__(self, probabilityAmplitudes, basis):
         
-        if len(_basis) == len(_probabilityAmplitudes):
+        if len(basis) == len(probabilityAmplitudes):
             
-            self.basis = _basis
-            self.probabilityAmplitudes = _probabilityAmplitudes
+            self.basis = basis
+            self.probabilityAmplitudes = probabilityAmplitudes
         
             self = self.normalize()
         
@@ -72,3 +89,13 @@ class WaveFunction:
             return probability.real
         
         else: raise AttributeError() 
+    
+    def ket(self): return CompexMatrix([self.probabilityAmplitudes])
+
+    def bra(self): return[ [probabilityAmplitude.conjugate()] for probabilityAmplitude in self.probabilityAmplitudes ]
+
+    def apply(self, operator):
+        
+       probabilityAmplitudes = (operator @ self.ket()).matrix[0]
+       
+       return WaveFunction(probabilityAmplitudes, self.basis)

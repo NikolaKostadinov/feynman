@@ -3,12 +3,7 @@ import math
 def toPolar(x, y):
     
     r = math.sqrt( x**2 + y**2 )
-    
-    if x != 0:
-        slope = y / x
-        theta = math.atan(slope)
-    else:
-        theta = .5 * math.pi
+    theta = math.atan2(y, x)
     
     return r, theta
 
@@ -85,6 +80,10 @@ class Complex:
 
     def __itruediv__(self, other): return self / other
 
+    def __pos__(self): return self
+    
+    def __neg__(self): return Complex(real=-self.real, imaginary=-self.imaginary)
+
     def conjugate(self):
         
         real = self.real
@@ -97,9 +96,15 @@ class Complex:
         conjugateSq = self.conjugate() * self
         return abs(conjugateSq.real)
 
-zero = Complex(real=0, imaginary=0)
-one = Complex(real=1, imaginary=0)
-i = Complex(real=0, imaginary=1)
-e = Complex(real=math.e, imaginary=0)
-
 def ToComplex(number): return Complex(real=number, imaginary=0)
+
+def ToImaginary(number): return Complex(real=0, imaginary=number)
+
+zero = ToComplex(0)
+one = ToComplex(1)
+i = ToImaginary(1)
+e = ToComplex(math.e)
+pi = ToComplex(math.pi)
+tau = ToComplex(2 * math.pi)
+halfpi = ToComplex(.5 * math.pi)
+roothalf = ToComplex(math.sqrt(.5))

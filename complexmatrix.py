@@ -1,4 +1,6 @@
-class Matrix:
+import complex
+
+class CompexMatrix:
     
     def __init__(self, matrix):
         
@@ -38,7 +40,7 @@ class Matrix:
                 
                     sum[i][j] = matrixLeft.matrix[i][j] + matrixRight.matrix[i][j]
             
-            return Matrix(sum)
+            return CompexMatrix(sum)
             
         else: raise IndexError()
         
@@ -46,18 +48,18 @@ class Matrix:
         
         if matrixLeft.columns == matrixRight.rows:
             
-            mul = [ [ 0 for _ in range(matrixLeft.rows) ] for _ in range(matrixRight.columns) ]
+            mul = [ [ complex.zero for _ in range(matrixLeft.rows) ] for _ in range(matrixRight.columns) ]
             
             for i in range(matrixRight.columns):
                 
                 for j in range(matrixLeft.rows):
                 
-                    sum = 0
+                    sum = complex.zero
                     for n in range(matrixLeft.columns):
                         sum += matrixRight.matrix[i][n] * matrixLeft.matrix[n][j]
                     mul[i][j] = sum
             
-            return Matrix(mul)
+            return CompexMatrix(mul)
         
         else: raise IndexError()
         
@@ -71,7 +73,7 @@ class Matrix:
                 
                 transposed[i][j], transposed[j][i] = transposed[j][i], transposed[i][j]
         
-        return Matrix(transposed)
+        return CompexMatrix(transposed)
     
     def apply(self, function):
         
@@ -95,11 +97,11 @@ def diagonal(diagonal, size):
         for j in range(size[1]):
             
             if i == j: column.append(diagonal[i])
-            else: column.append(0)
+            else: column.append(complex.zero)
             
         matrix.append(column)
         
-    return Matrix(matrix)
+    return CompexMatrix(matrix)
 
 def wideDiagonal(diagonalValue, offsetValue, size):
     
@@ -112,7 +114,7 @@ def wideDiagonal(diagonalValue, offsetValue, size):
             
             if i == j: column.append(diagonalValue)
             elif i+1 == j or i == j+1 or i-1 == j or i == j-1: column.append(offsetValue)
-            else: column.append(0)
+            else: column.append(complex.zero)
         matrix.append(column)
         
-    return Matrix(matrix)
+    return CompexMatrix(matrix)
