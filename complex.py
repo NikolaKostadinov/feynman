@@ -95,6 +95,8 @@ class Complex:
         
         conjugateSq = self.conjugate() * self
         return abs(conjugateSq.real)
+    
+    def square(self): return self * self
 
 def ToComplex(number): return Complex(real=number, imaginary=0)
 

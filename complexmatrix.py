@@ -44,6 +44,22 @@ class CompexMatrix:
             
         else: raise IndexError()
         
+    def __sub__(matrixLeft, matrixRight):
+        
+        if matrixLeft.size == matrixRight.size:
+            
+            sum = [ [ 0 for _ in range(matrixLeft.rows) ] for _ in range(matrixLeft.columns) ]
+            
+            for i in range(matrixLeft.columns):
+                
+                for j in range(matrixLeft.rows):
+                
+                    sum[i][j] = matrixLeft.matrix[i][j] - matrixRight.matrix[i][j]
+            
+            return CompexMatrix(sum)
+            
+        else: raise IndexError()
+        
     def __matmul__(matrixLeft, matrixRight):
         
         if matrixLeft.columns == matrixRight.rows:
@@ -85,8 +101,24 @@ class CompexMatrix:
                 
         return self
     
-    def scale(self, factor): return self.apply(lambda x: factor * x)
+    def scale(self, factor): return self.apply(lambda x: factor * x)    
+
+def identity(size):
     
+    matrix = []
+    
+    for i in range(size[0]):
+        
+        column = []
+        for j in range(size[1]):
+            
+            if i == j: column.append(complex.one)
+            else: column.append(complex.zero)
+            
+        matrix.append(column)
+        
+    return CompexMatrix(matrix)
+
 def diagonal(diagonal, size):
     
     matrix = []

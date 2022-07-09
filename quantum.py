@@ -22,6 +22,13 @@ class WaveFunction:
     
     def totalProbability(self):
         
+        """
+        Get the total probability of the wave function.
+        If it is not 1 then you should normilize it with
+        the normalize() method.\n
+        Example: < ψ | ψ > = 1
+        """
+        
         probability = 0
         
         for probabilityAmplitude in self.probabilityAmplitudes:
@@ -31,13 +38,26 @@ class WaveFunction:
     
     def normalize(self):
         
+        """
+        Normilize the wave function.\n
+        Example: \ ψ > => 1/√N \ ψ >
+        """
+        
         normalizationFactor = self.totalProbability()
         
         self.probabilityAmplitudes = list(map(lambda amplitude: complex.ToComplex(math.sqrt(1 / normalizationFactor)) * amplitude, self.probabilityAmplitudes))
             
         return self
     
-    def __init__(self, probabilityAmplitudes, basis):
+    def __init__(self, probabilityAmplitudes, basis, **kwargs):
+        
+        """
+        Initiate a wave function with given
+        probability amplitudes and their state basis.\n
+        Example: \ ψ > = Σ probability amplitude . \ state >
+        """
+        
+        self.mass = kwargs.get('mass')
         
         if len(basis) == len(probabilityAmplitudes):
             
@@ -64,19 +84,42 @@ class WaveFunction:
     
     def probabilityAmplitude(self, base):
         
+        """
+        Return the probability amplitude of a given state\n
+        Example: probability amplitude =  < state | ψ >
+        """
+        
         index = self.basis.index(base)
         return self.probabilityAmplitudes[index]
     
-    def probability(self, base): return self.probabilityAmplitude(base).conjugateSquare()
+    def probability(self, base):
+        
+        """
+        Return the probability of a given state\n
+        Example: probability =  < state | ψ >²
+        """
+        
+        return self.probabilityAmplitude(base).conjugateSquare()
     
     def conjugate(self):
         
-        self.probabilityAmplitudes = [ probabilitiAmplitude.conjugate() for probabilitiAmplitude in self.probabilityAmplitudes ]
+        """
+        Conjugate wave function\n
+        Example: < ψ / = \ ψ >*
+        """
+        
+        self.probabilityAmplitudes = list(map(lambda probAmp: probAmp.conjugate(), self.probabilityAmplitudes))
         return self
     
     def __len__(self): return len(self.basis)
     
-    def probabilityOfColapse(self, other):
+    def probabilityAmplitudeOfColapse(self, other):
+        
+        """
+        Probability amplitude of wave function
+        collapsing into another wave function\n
+        Example: < ϕ | ψ >
+        """
         
         if self.basis == other.basis:
             
@@ -90,12 +133,56 @@ class WaveFunction:
         
         else: raise AttributeError() 
     
-    def ket(self): return CompexMatrix([self.probabilityAmplitudes])
+    def ket(self):
+        
+        """
+        Return wave function as a ket.\n
+        Example: \ ψ > = [ . . . ]
+        """
+        
+        return CompexMatrix([self.probabilityAmplitudes])
 
-    def bra(self): return[ [probabilityAmplitude.conjugate()] for probabilityAmplitude in self.probabilityAmplitudes ]
+    def bra(self):
+        
+        """
+        Return wave function as a bra.\n
+        Example: < ψ / = [ . . . ]
+        """
+        
+        return[ [probabilityAmplitude.conjugate()] for probabilityAmplitude in self.probabilityAmplitudes ]
 
     def apply(self, operator):
         
-       probabilityAmplitudes = (operator @ self.ket()).matrix[0]
+        """
+        Apply operator to the wave function.\n
+        Example: \ ψ > => operator \ ψ >
+        
+        """
+        
+        probabilityAmplitudes = (operator @ self.ket()).matrix[0]
        
-       return WaveFunction(probabilityAmplitudes, self.basis)
+        return WaveFunction(probabilityAmplitudes, self.basis)
+   
+    def timeEvolve(self, potential):
+        
+        """
+        Calculate how the wave function changes
+        over small interval of time with a given
+        potential. This returns
+        the next wave function.\n
+        Example: \ ψ > => [ 1 - i/ℏ H Δt ] \ ψ >
+        
+        """
+        
+        deltaX = complex.ToComplex(.001)
+        deltaTime = complex.ToComplex(.001)
+        N = len(self)
+        
+        potential = list(map(lambda u:  complex.ToComplex(u), potential))
+        
+        laplaceOperator = complexmatrix.wideDiagonal(complex.ToComplex(-2), complex.one, (N, N))
+        squaredMomentumOperator = laplaceOperator.scale(-hbar.square() / deltaX.square())
+        hamiltonianOperator = squaredMomentumOperator.scale((complex.ToComplex(.5 / self.mass))) + complexmatrix.diagonal(potential, (N, N))
+        timeEvolutionOperator = complexmatrix.identity((N, N)) - hamiltonianOperator.scale(complex.i * deltaTime / hbar)
+        
+        return self.apply(timeEvolutionOperator)
