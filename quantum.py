@@ -82,6 +82,8 @@ class WaveFunction:
     
     def __repr__(self): return f'Wave Function: {self.probabilityAmplitudes}'
     
+    def __len__(self): return len(self.basis)
+    
     def probabilityAmplitude(self, base):
         
         """
@@ -111,7 +113,14 @@ class WaveFunction:
         self.probabilityAmplitudes = list(map(lambda probAmp: probAmp.conjugate(), self.probabilityAmplitudes))
         return self
     
-    def __len__(self): return len(self.basis)
+    def probabilityDensity(self):
+        
+        """
+        Convert wave function to probability density array.
+        Example: probability density = ψ* ψ
+        """
+    
+        return list(map(lambda probAmp: probAmp.conjugateSquare(), self.probabilityAmplitudes))
     
     def probabilityAmplitudeOfColapse(self, other):
         
@@ -185,4 +194,5 @@ class WaveFunction:
         hamiltonianOperator = squaredMomentumOperator.scale((complex.ToComplex(.5 / self.mass))) + complexmatrix.diagonal(potential, (N, N))
         timeEvolutionOperator = complexmatrix.identity((N, N)) - hamiltonianOperator.scale(complex.i * deltaTime / hbar)
         
-        return self.apply(timeEvolutionOperator)
+        result = self.apply(timeEvolutionOperator)
+        return WaveFunction(result.probabilityAmplitudes, result.basis, mass=self.mass)
