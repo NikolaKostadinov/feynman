@@ -6,7 +6,7 @@ from complexmatrix import CompexMatrix
 import quantum
 from quantum import WaveFunction
 
-from matplotlib import pyplot
+from matplotlib import pyplot, animation
 
 NUMBER_OF_X = 100
 NUMBER_OF_T = 100
@@ -14,7 +14,7 @@ NUMBER_OF_T = 100
 START = -1
 END = 1
 
-TOTAL_TIME = 10
+TOTAL_TIME = .01
 
 MASS = 1
 
@@ -25,20 +25,36 @@ deltaT = TOTAL_TIME / NUMBER_OF_T
 
 X = [ x * deltaX + START for x in range(NUMBER_OF_X) ]
 
-INIT_WAVE_FUNCTION = lambda x: complex.ToComplex(math.cos(x))
-initialWaveFunction = WaveFunction([ INIT_WAVE_FUNCTION(x) for x in X ], X, mass=MASS)
+INIT_WAVE_FUNCTION = lambda x: math.sin(100*math.pi * x)
+initialWaveFunction = WaveFunction([ complex.ToComplex(INIT_WAVE_FUNCTION(x)) for x in X ], X, mass=MASS)
 
 POTENTIAL = lambda x: 0
 potential = [ POTENTIAL(x) for x in X ]
 
-fullWaveFunction = [ None for _ in range(NUMBER_OF_T) ]
+fullWaveFunction = [ WaveFunction() for _ in range(NUMBER_OF_T) ]
 fullWaveFunction[0] = initialWaveFunction
+
+# Schrodinger Equation
 
 for t in range(len(fullWaveFunction) - 1):
     
-    fullWaveFunction[t + 1] = fullWaveFunction[t].timeEvolve(potential)
+    fullWaveFunction[t + 1] = fullWaveFunction[t].timeEvolve(potential, deltaX, deltaT)
     
 probabilityDensity = fullWaveFunction[-1].probabilityDensity()
 
-pyplot.plot(X, probabilityDensity, color='g')
+# Animation
+
+fig = pyplot.figure()
+ax = pyplot.axes(xlim=(START, END), ylim=(0, .75))
+line, = ax.plot([], [], lw=2)
+
+def init():
+    line.set_data([], [])
+    return line,
+
+def animate(t):
+    line.set_data(X, fullWaveFunction[t-1].probabilityDensity())
+    return line,
+
+anim = animation.FuncAnimation(fig, animate, init_func=init, frames=NUMBER_OF_T, interval=40, blit=True)
 pyplot.show()

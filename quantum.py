@@ -1,6 +1,5 @@
 import math
 import complex
-from complex import Complex
 import complexmatrix
 from complexmatrix import CompexMatrix
 
@@ -49,7 +48,7 @@ class WaveFunction:
             
         return self
     
-    def __init__(self, probabilityAmplitudes, basis, **kwargs):
+    def __init__(self, probabilityAmplitudes=[], basis=[], **kwargs):
         
         """
         Initiate a wave function with given
@@ -172,7 +171,7 @@ class WaveFunction:
        
         return WaveFunction(probabilityAmplitudes, self.basis)
    
-    def timeEvolve(self, potential):
+    def timeEvolve(self, potential, deltaX, deltaT):
         
         """
         Calculate how the wave function changes
@@ -183,8 +182,8 @@ class WaveFunction:
         
         """
         
-        deltaX = complex.ToComplex(.001)
-        deltaTime = complex.ToComplex(.001)
+        deltaX = complex.ToComplex(deltaX)
+        deltaT = complex.ToComplex(deltaT)
         N = len(self)
         
         potential = list(map(lambda u:  complex.ToComplex(u), potential))
@@ -192,7 +191,7 @@ class WaveFunction:
         laplaceOperator = complexmatrix.wideDiagonal(complex.ToComplex(-2), complex.one, (N, N))
         squaredMomentumOperator = laplaceOperator.scale(-hbar.square() / deltaX.square())
         hamiltonianOperator = squaredMomentumOperator.scale((complex.ToComplex(.5 / self.mass))) + complexmatrix.diagonal(potential, (N, N))
-        timeEvolutionOperator = complexmatrix.identity((N, N)) - hamiltonianOperator.scale(complex.i * deltaTime / hbar)
+        timeEvolutionOperator = complexmatrix.identity((N, N)) - hamiltonianOperator.scale(complex.i * deltaT / hbar)
         
         result = self.apply(timeEvolutionOperator)
         return WaveFunction(result.probabilityAmplitudes, result.basis, mass=self.mass)
