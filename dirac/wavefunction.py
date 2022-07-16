@@ -3,20 +3,9 @@ import complex
 from complex import Complex
 import complexmatrix
 from complexmatrix import CompexMatrix
-
-HBAR = 1
-hbar = complex.ToComplex(HBAR)
-halfhbar = complex.ToComplex(.5 * HBAR)
-
-pauliX = CompexMatrix([ [complex.zero, complex.one], [complex.one, complex.zero] ])
-pauliY = CompexMatrix([ [complex.zero, complex.i], [-complex.i, complex.zero] ])
-pauliZ = CompexMatrix([ [complex.one, complex.zero], [complex.zero, -complex.one] ])
-
-spinX = pauliX.scale(halfhbar)
-spinY = pauliY.scale(halfhbar)
-spinZ = pauliZ.scale(halfhbar)
-
-hadamard = CompexMatrix([ [complex.one, complex.one], [complex.one, -complex.one] ]).scale(complex.roothalf)
+import constants
+import operators
+from operators import Operator
 
 class WaveFunction:
     
@@ -197,7 +186,7 @@ class WaveFunction:
         
         return [ [probabilityAmplitude.conjugate()] for probabilityAmplitude in self.probabilityAmplitudes ]
 
-    def apply(self, operator: CompexMatrix):
+    def apply(self, operator: Operator):
         
         """
         Apply operator to the wave function.\n
@@ -205,11 +194,21 @@ class WaveFunction:
         
         """
         
-        probabilityAmplitudes = (operator @ self.ket()).matrix[0]
-       
-        return WaveFunction(probabilityAmplitudes, self.basis)
+        if operator.isMatrix:
+            
+            probabilityAmplitudes = (operator.matrix @ self.ket()).matrix[0]
+            
+            return WaveFunction(probabilityAmplitudes, self.basis)
+        
+        elif operator.type == 'momentum':
+            
+            # momentum shit here
+            
+            pass
+        
+        else: raise ValueError()
    
-    def timeEvolve(self, hamiltonian: CompexMatrix):
+    def timeEvolve(self, hamiltonian: Operator):
         
         """
         Calculate how the wave function changes
@@ -224,7 +223,7 @@ class WaveFunction:
         deltaT = complex.ToComplex(DELTA_T)
         N = len(self)
         
-        timeEvolutionOperator = complexmatrix.identity((N, N)) - hamiltonian.scale(complex.i * deltaT / hbar)
+        timeEvolutionOperator = complexmatrix.identity((N, N)) - hamiltonian.scale(complex.i * deltaT / constants.hbar)
         
         result = self.apply(timeEvolutionOperator)
         return WaveFunction(result.probabilityAmplitudes, result.basis, mass=self.mass)

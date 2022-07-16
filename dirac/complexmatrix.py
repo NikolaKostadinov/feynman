@@ -119,14 +119,15 @@ def identity(size):
         
     return CompexMatrix(matrix)
 
-def diagonal(diagonal, size):
+def diagonal(diagonal):
     
     matrix = []
+    size = len(diagonal)
     
-    for i in range(size[0]):
+    for i in range(size):
         
         column = []
-        for j in range(size[1]):
+        for j in range(size):
             
             if i == j: column.append(diagonal[i])
             else: column.append(complex.zero)
