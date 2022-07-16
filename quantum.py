@@ -1,5 +1,6 @@
 import math
 import complex
+from complex import Complex
 import complexmatrix
 from complexmatrix import CompexMatrix
 
@@ -31,24 +32,48 @@ class WaveFunction:
         probability = 0
         
         for probabilityAmplitude in self.probabilityAmplitudes:
-            probability += probabilityAmplitude.conjugateSquare()
+            
+            if isinstance(probabilityAmplitude, Complex):
+                probability += probabilityAmplitude.conjugateSquare()
+            elif isinstance(probabilityAmplitude, WaveFunction):
+                probability += probabilityAmplitude.totalProbability()
+            else: TypeError()
             
         return probability
     
-    def normalize(self):
+    def scale(self, factor: Complex):
+        
+        """
+        Scale every probability amplitude by some factor.\n
+        Example: \ ψ > => f . \ ψ >
+        """
+        
+        def scaleAmplitude(probabilityAmplitude):
+            
+            if isinstance(probabilityAmplitude, Complex):
+                return probabilityAmplitude * factor
+            elif isinstance(probabilityAmplitude, WaveFunction):
+                return probabilityAmplitude.scale(factor)
+            else: TypeError()
+        
+        self.probabilityAmplitudes = [ scaleAmplitude(probabilityAmplitude) for probabilityAmplitude in self.probabilityAmplitudes ]
+        
+        return self
+    
+    def normalize(self, normalizeTo: float = 1):
         
         """
         Normilize the wave function.\n
         Example: \ ψ > => 1/√N \ ψ >
         """
         
-        normalizationFactor = self.totalProbability()
-        
-        self.probabilityAmplitudes = list(map(lambda amplitude: complex.ToComplex(math.sqrt(1 / normalizationFactor)) * amplitude, self.probabilityAmplitudes))
+        normalizationFactor = complex.ToComplex(math.sqrt(normalizeTo / self.totalProbability())) 
+
+        self = self.scale(normalizationFactor)
             
         return self
     
-    def __init__(self, probabilityAmplitudes=[], basis=[], **kwargs):
+    def __init__(self, probabilityAmplitudes: list = [], basis: list = []):
         
         """
         Initiate a wave function with given
@@ -56,15 +81,13 @@ class WaveFunction:
         Example: \ ψ > = Σ probability amplitude . \ state >
         """
         
-        self.mass = kwargs.get('mass')
-        
         if len(basis) == len(probabilityAmplitudes):
             
-            self.basis = basis
+            self.basis = basis   
             self.probabilityAmplitudes = probabilityAmplitudes
         
             self = self.normalize()
-        
+            
         else: raise AttributeError()
     
     def __str__(self):
@@ -100,7 +123,13 @@ class WaveFunction:
         Example: probability =  < state | ψ >²
         """
         
-        return self.probabilityAmplitude(base).conjugateSquare()
+        probabilityAmplitude = self.probabilityAmplitude(base)
+        
+        if isinstance(probabilityAmplitude, Complex):
+            return probabilityAmplitude.conjugateSquare()
+        elif isinstance(probabilityAmplitude, WaveFunction):
+            return probabilityAmplitude.totalProbability()
+        else: TypeError()
     
     def conjugate(self):
         
@@ -109,7 +138,8 @@ class WaveFunction:
         Example: < ψ / = \ ψ >*
         """
         
-        self.probabilityAmplitudes = list(map(lambda probAmp: probAmp.conjugate(), self.probabilityAmplitudes))
+        self.probabilityAmplitudes = [ probabilityAmplitude.conjugate() for probabilityAmplitude in self.probabilityAmplitudes ]
+        
         return self
     
     def probabilityDensity(self):
@@ -119,7 +149,15 @@ class WaveFunction:
         Example: probability density = ψ* ψ
         """
     
-        return list(map(lambda probAmp: probAmp.conjugateSquare(), self.probabilityAmplitudes))
+        def probabilityDensityOfAmplitude(probabilityAmplitude):
+            
+            if isinstance(probabilityAmplitude, Complex):
+                return probabilityAmplitude.conjugateSquare()
+            elif isinstance(probabilityAmplitude, WaveFunction):
+                return probabilityAmplitude.probabilityDensity()
+            else: TypeError()
+        
+        return [ probabilityDensityOfAmplitude(probabilityAmplitude) for probabilityAmplitude in self.probabilityAmplitudes ]
     
     def probabilityAmplitudeOfColapse(self, other):
         
@@ -154,12 +192,12 @@ class WaveFunction:
         
         """
         Return wave function as a bra.\n
-        Example: < ψ / = [ . . . ]
+        Example: < ψ / = [ ' ' ' ]
         """
         
-        return[ [probabilityAmplitude.conjugate()] for probabilityAmplitude in self.probabilityAmplitudes ]
+        return [ [probabilityAmplitude.conjugate()] for probabilityAmplitude in self.probabilityAmplitudes ]
 
-    def apply(self, operator):
+    def apply(self, operator: CompexMatrix):
         
         """
         Apply operator to the wave function.\n
@@ -171,7 +209,7 @@ class WaveFunction:
        
         return WaveFunction(probabilityAmplitudes, self.basis)
    
-    def timeEvolve(self, potential, deltaX, deltaT):
+    def timeEvolve(self, hamiltonian: CompexMatrix):
         
         """
         Calculate how the wave function changes
@@ -182,16 +220,11 @@ class WaveFunction:
         
         """
         
-        deltaX = complex.ToComplex(deltaX)
-        deltaT = complex.ToComplex(deltaT)
+        DELTA_T = .0000001
+        deltaT = complex.ToComplex(DELTA_T)
         N = len(self)
         
-        potential = list(map(lambda u:  complex.ToComplex(u), potential))
-        
-        laplaceOperator = complexmatrix.wideDiagonal(complex.ToComplex(-2), complex.one, (N, N))
-        squaredMomentumOperator = laplaceOperator.scale(-hbar.square() / deltaX.square())
-        hamiltonianOperator = squaredMomentumOperator.scale((complex.ToComplex(.5 / self.mass))) + complexmatrix.diagonal(potential, (N, N))
-        timeEvolutionOperator = complexmatrix.identity((N, N)) - hamiltonianOperator.scale(complex.i * deltaT / hbar)
+        timeEvolutionOperator = complexmatrix.identity((N, N)) - hamiltonian.scale(complex.i * deltaT / hbar)
         
         result = self.apply(timeEvolutionOperator)
         return WaveFunction(result.probabilityAmplitudes, result.basis, mass=self.mass)
