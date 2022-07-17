@@ -1,6 +1,6 @@
 import dirac.complex as complex
 
-class CompexMatrix:
+class ComplexMatrix:
     
     def __init__(self, matrix):
         
@@ -40,7 +40,7 @@ class CompexMatrix:
                 
                     sum[i][j] = matrixLeft.matrix[i][j] + matrixRight.matrix[i][j]
             
-            return CompexMatrix(sum)
+            return ComplexMatrix(sum)
             
         else: raise IndexError()
         
@@ -56,7 +56,7 @@ class CompexMatrix:
                 
                     sum[i][j] = matrixLeft.matrix[i][j] - matrixRight.matrix[i][j]
             
-            return CompexMatrix(sum)
+            return ComplexMatrix(sum)
             
         else: raise IndexError()
         
@@ -75,7 +75,7 @@ class CompexMatrix:
                         sum += matrixRight.matrix[i][n] * matrixLeft.matrix[n][j]
                     mul[i][j] = sum
             
-            return CompexMatrix(mul)
+            return ComplexMatrix(mul)
         
         else: raise IndexError()
         
@@ -89,7 +89,7 @@ class CompexMatrix:
                 
                 transposed[i][j], transposed[j][i] = transposed[j][i], transposed[i][j]
         
-        return CompexMatrix(transposed)
+        return ComplexMatrix(transposed)
     
     def apply(self, function):
         
@@ -117,7 +117,7 @@ def identity(size):
             
         matrix.append(column)
         
-    return CompexMatrix(matrix)
+    return ComplexMatrix(matrix)
 
 def diagonal(diagonal):
     
@@ -134,7 +134,7 @@ def diagonal(diagonal):
             
         matrix.append(column)
         
-    return CompexMatrix(matrix)
+    return ComplexMatrix(matrix)
 
 def wideDiagonal(diagonalValue, offsetValue, size):
     
@@ -150,4 +150,4 @@ def wideDiagonal(diagonalValue, offsetValue, size):
             else: column.append(complex.zero)
         matrix.append(column)
         
-    return CompexMatrix(matrix)
+    return ComplexMatrix(matrix)

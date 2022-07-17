@@ -82,17 +82,17 @@ class QuantumState:
     
     def __str__(self):
         
-        waveFunctionString = '[\n'
+        quantumStateString = '[\n'
         
         for base, probabilityAmplitude in zip(self.basis, self.probabilityAmplitudes):
             
-            waveFunctionString += f'\t{base}: {probabilityAmplitude}\n'
+            quantumStateString += f'\t{base}: {probabilityAmplitude}\n'
             
-        waveFunctionString += ']'
+        quantumStateString += ']'
         
-        return waveFunctionString
+        return quantumStateString
     
-    def __repr__(self): return f'Wave Function: {self.probabilityAmplitudes}'
+    def __repr__(self): return f'Quantum state: {self.probabilityAmplitudes}'
     
     def __len__(self): return len(self.basis)
     
@@ -229,11 +229,14 @@ class QuantumState:
             
             return QuantumState(probabilityAmplitudes, self.basis)
         
-        elif operator.type == 'momentum':
+        elif operator.isComposed:
             
-            # momentum shit here
+            state = self
+            for operation in operator.composition: state = state.apply(operation)
             
-            pass
+            return state
+        
+        elif operator.type == 'scalar': return self.scale(operator.factor)
         
         else: raise ValueError()
    
@@ -246,10 +249,10 @@ class QuantumState:
         Example: \ ψ > => [ 1 - i/ℏ H Δt ] \ ψ >
         """
         
-        deltaT = constants.delta
         N = len(self)
+        deltaT = constants.delta
         
-        timeEvolutionOperator = complexmatrix.identity((N, N)) - hamiltonian.scale(complex.i * deltaT / constants.hbar)
+        timeEvolutionOperator = complexmatrix.identity((N, N)) - hamiltonian.scale(constants.isubhbar * deltaT)
         
         result = self.apply(timeEvolutionOperator)
-        return QuantumState(result.probabilityAmplitudes, result.basis)
+        return QuantumState(result.probabilityAmplitudes, self.basis)
