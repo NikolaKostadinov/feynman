@@ -1,18 +1,18 @@
 import math
-import complex
-from complex import Complex
-import complexmatrix
-from complexmatrix import CompexMatrix
-import constants
-import operators
-from operators import Operator
+import dirac.complex as complex
+from dirac.complex import Complex
+import dirac.complexmatrix as complexmatrix
+from dirac.complexmatrix import CompexMatrix
+import dirac.constants as constants
+import dirac.operator as operator
+from dirac.operator import Operator
 
-class WaveFunction:
+class QuantumState:
     
     def totalProbability(self):
         
         """
-        Get the total probability of the wave function.
+        Get the total probability of the state.
         If it is not 1 then you should normilize it with
         the normalize() method.\n
         Example: < ψ | ψ > = 1
@@ -24,7 +24,7 @@ class WaveFunction:
             
             if isinstance(probabilityAmplitude, Complex):
                 probability += probabilityAmplitude.conjugateSquare()
-            elif isinstance(probabilityAmplitude, WaveFunction):
+            elif isinstance(probabilityAmplitude, QuantumState):
                 probability += probabilityAmplitude.totalProbability()
             else: TypeError()
             
@@ -41,7 +41,7 @@ class WaveFunction:
             
             if isinstance(probabilityAmplitude, Complex):
                 return probabilityAmplitude * factor
-            elif isinstance(probabilityAmplitude, WaveFunction):
+            elif isinstance(probabilityAmplitude, QuantumState):
                 return probabilityAmplitude.scale(factor)
             else: TypeError()
         
@@ -52,7 +52,8 @@ class WaveFunction:
     def normalize(self, normalizeTo: float = 1):
         
         """
-        Normilize the wave function.\n
+        Normilize the quantum state. You can also
+        normilize it so it has an arbitrary total probability.\n
         Example: \ ψ > => 1/√N \ ψ >
         """
         
@@ -65,7 +66,7 @@ class WaveFunction:
     def __init__(self, probabilityAmplitudes: list = [], basis: list = []):
         
         """
-        Initiate a wave function with given
+        Initiate a quantum state with given
         probability amplitudes and their state basis.\n
         Example: \ ψ > = Σ probability amplitude . \ state >
         """
@@ -98,7 +99,7 @@ class WaveFunction:
     def probabilityAmplitude(self, base):
         
         """
-        Return the probability amplitude of a given state\n
+        Return the probability amplitude of a given state.\n
         Example: probability amplitude =  < state | ψ >
         """
         
@@ -108,7 +109,7 @@ class WaveFunction:
     def probability(self, base):
         
         """
-        Return the probability of a given state\n
+        Return the probability of a given state.\n
         Example: probability =  < state | ψ >²
         """
         
@@ -116,15 +117,15 @@ class WaveFunction:
         
         if isinstance(probabilityAmplitude, Complex):
             return probabilityAmplitude.conjugateSquare()
-        elif isinstance(probabilityAmplitude, WaveFunction):
+        elif isinstance(probabilityAmplitude, QuantumState):
             return probabilityAmplitude.totalProbability()
         else: TypeError()
     
     def conjugate(self):
         
         """
-        Conjugate wave function\n
-        Example: < ψ / = \ ψ >*
+        Conjugate transpose the quantum state.\n
+        Example: < ψ / = \ ψ >†
         """
         
         self.probabilityAmplitudes = [ probabilityAmplitude.conjugate() for probabilityAmplitude in self.probabilityAmplitudes ]
@@ -134,7 +135,7 @@ class WaveFunction:
     def probabilityDensity(self):
         
         """
-        Convert wave function to probability density array.
+        Convert the quantum state to probability density distribution.\n
         Example: probability density = ψ* ψ
         """
     
@@ -142,7 +143,7 @@ class WaveFunction:
             
             if isinstance(probabilityAmplitude, Complex):
                 return probabilityAmplitude.conjugateSquare()
-            elif isinstance(probabilityAmplitude, WaveFunction):
+            elif isinstance(probabilityAmplitude, QuantumState):
                 return probabilityAmplitude.probabilityDensity()
             else: TypeError()
         
@@ -151,54 +152,82 @@ class WaveFunction:
     def probabilityAmplitudeOfColapse(self, other):
         
         """
-        Probability amplitude of wave function
-        collapsing into another wave function\n
+        Probability amplitude of this quantum state
+        collapsing into another state.\n
         Example: < ϕ | ψ >
         """
         
-        if self.basis == other.basis:
+        if isinstance(other, QuantumState):
             
-            probability = complex.zero
+            if self.basis == other.basis:
+                
+                probability = complex.zero
+                
+                for base in self.basis:
+                    
+                    probability += other.probabilityAmplitude(base).conjugate() * self.probabilityAmplitude(base)
+                    
+                return probability.real
             
-            for base in self.basis:
-                
-                probability += other.probabilityAmplitude(base).conjugate() * self.probabilityAmplitude(base)
-                
-            return probability.real
+            else: raise AttributeError()
         
-        else: raise AttributeError() 
+        else: raise AttributeError()
+    
+    def probabilityOfColapse(self, other):
+        
+        """
+        Probability of this quantum state
+        collapsing into another state.\n
+        Example: < ϕ | ψ >
+        """
+        
+        if isinstance(other, QuantumState): return self.probabilityAmplitudeOfColapse(other).congugateSquare() 
+        else: raise AttributeError()
     
     def ket(self):
         
         """
-        Return wave function as a ket.\n
+        Return quantum state as a ket. Type of
+        the returned ket is ComplexMatrix.\n
         Example: \ ψ > = [ . . . ]
         """
         
-        return CompexMatrix([self.probabilityAmplitudes])
+        ket = []
+        
+        if all(isinstance(probabilityAmplitude, Complex) for probabilityAmplitude in self.probabilityAmplitudes):
+            
+            ket =  [self.probabilityAmplitudes]
+        
+        elif all(isinstance(probabilityAmplitude, QuantumState) for probabilityAmplitude in self.probabilityAmplitudes):
+            
+            ket = [ probabilityAmplitude.ket().matrix[0] for probabilityAmplitude in self.probabilityAmplitudes ]
+        
+        else: raise AttributeError()
+        
+        return CompexMatrix(ket)
 
     def bra(self):
         
         """
-        Return wave function as a bra.\n
+        Return quantum state as a bra. Type of
+        the returned bra is ComplexMatrix.\n
         Example: < ψ / = [ ' ' ' ]
         """
         
-        return [ [probabilityAmplitude.conjugate()] for probabilityAmplitude in self.probabilityAmplitudes ]
+        return self.conjugate().ket().transpose()
 
     def apply(self, operator: Operator):
         
         """
-        Apply operator to the wave function.\n
+        Apply operator to the quantum state.\n
         Example: \ ψ > => operator \ ψ >
-        
         """
         
-        if operator.isMatrix:
+        if operator.isMatrix and self.ket().rows < 2:
             
             probabilityAmplitudes = (operator.matrix @ self.ket()).matrix[0]
             
-            return WaveFunction(probabilityAmplitudes, self.basis)
+            return QuantumState(probabilityAmplitudes, self.basis)
         
         elif operator.type == 'momentum':
             
@@ -211,19 +240,16 @@ class WaveFunction:
     def timeEvolve(self, hamiltonian: Operator):
         
         """
-        Calculate how the wave function changes
+        Calculate how the quantum state changes
         over small interval of time with a given
-        potential. This returns
-        the next wave function.\n
+        potential. This returns the next state.\n
         Example: \ ψ > => [ 1 - i/ℏ H Δt ] \ ψ >
-        
         """
         
-        DELTA_T = .0000001
-        deltaT = complex.ToComplex(DELTA_T)
+        deltaT = constants.delta
         N = len(self)
         
         timeEvolutionOperator = complexmatrix.identity((N, N)) - hamiltonian.scale(complex.i * deltaT / constants.hbar)
         
         result = self.apply(timeEvolutionOperator)
-        return WaveFunction(result.probabilityAmplitudes, result.basis, mass=self.mass)
+        return QuantumState(result.probabilityAmplitudes, result.basis)

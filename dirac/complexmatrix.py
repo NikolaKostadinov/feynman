@@ -1,4 +1,4 @@
-import complex
+import dirac.complex as complex
 
 class CompexMatrix:
     

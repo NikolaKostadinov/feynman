@@ -1,8 +1,8 @@
-import complex
-from complex import Complex
-import complexmatrix
-from complexmatrix import CompexMatrix
-import constants
+import dirac.complex as complex
+from dirac.complex import Complex
+import dirac.complexmatrix as complexmatrix
+from dirac.complexmatrix import CompexMatrix
+import dirac.constants as constants
 
 class Operator:
     
