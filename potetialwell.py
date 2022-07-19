@@ -12,24 +12,26 @@ from matplotlib import pyplot, animation
 N = 100
 T = 100
 
-L = 10
-n = 10
+L = 1
+n = 1
 mass = 1
-initialFunction = lambda x: math.sin(n * math.pi * x / L)
+initialFunction = lambda x, p: complex.exp(- x * x / complex.ToComplex(.01) + complex.i * p * x)
 potentialFunction = lambda x: 0
+
 
 X = [ index * L / N for index in range(N) ]
 
 potentialField = [ potentialFunction(x) for x in X ]
 
-initialWave = [ complex.ToComplex(initialFunction(x)) for x in X ]
+initialWave = [ initialFunction(complex.ToComplex(x - L/2), complex.ToComplex(10000)) for x in X ]
 initialState = QuantumState(initialWave, X)
 
 PSI = [initialState]
 for t in range(1, T): PSI.append(PSI[-1].shrodingerEvolve(mass, potentialField))
 
+
 fig = pyplot.figure()
-ax = pyplot.axes(xlim=(0, L), ylim=(0, 1))
+ax = pyplot.axes(xlim=(0, L), ylim=(0, .25))
 line, = ax.plot([], [], lw=2)
 
 def init():

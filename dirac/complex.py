@@ -105,6 +105,10 @@ def ToComplex(number): return Complex(real=number, imaginary=0)
 
 def ToImaginary(number): return Complex(real=0, imaginary=number)
 
+def exp(comlexNumber: Complex):
+    
+    return Complex(modulus = math.exp(comlexNumber.real), argument = comlexNumber.imaginary)
+
 zero = ToComplex(0)
 one = ToComplex(1)
 i = ToImaginary(1)

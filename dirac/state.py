@@ -190,6 +190,10 @@ class QuantumState:
         if isinstance(other, QuantumState): return self.probabilityAmplitudeOfColapse(other).congugateSquare() 
         else: raise AttributeError()
     
+    def phases(self):
+        
+        return [ probabilityAmplitude.argument for probabilityAmplitude in self.probabilityAmplitudes ]
+    
     def ketMatrix(self):
         
         """
@@ -273,10 +277,10 @@ class QuantumState:
         
         elif operator.type == 'd/dx':
             
-            psi = self.probabilityAmplitudes
-            nextPsi = self.probabilityAmplitudes
-            X = [ complex.ToComplex(base) for base in self.basis ]
             N = len(self)
+            X = [ complex.ToComplex(base) for base in self.basis ]
+            psi = self.probabilityAmplitudes
+            nextPsi = [ complex.zero for _ in range(N) ]
 
             for x in range(N):
                 
@@ -284,24 +288,31 @@ class QuantumState:
                 coreX = X[x]
                 
                 try:
-                    leftWing = psi[x + 1]
-                    leftX = X[x + 1]
+                    leftWing = psi[x - 1]
+                    leftX = X[x - 1]
                 except:
                     leftWing = complex.zero
                     leftX = complex.zero
+                    
+                try:
+                    rightWing = psi[x + 1]
+                    rightX = X[x + 1]
+                except:
+                    leftWing = complex.zero
+                    rightX = complex.zero
 
-                deltaX = leftX - coreX
+                deltaX = rightX - leftX
 
-                nextPsi[x] = (leftWing - core) / deltaX
+                nextPsi[x] = (rightWing - leftWing) / deltaX
             
             return QuantumState(nextPsi, self.basis, normalize=False)
         
         elif operator.type == 'd2/dx2': 
             
-            psi = self.probabilityAmplitudes
-            nextPsi = self.probabilityAmplitudes
-            X = [ complex.ToComplex(base) for base in self.basis ]
             N = len(self)
+            X = [ complex.ToComplex(base) for base in self.basis ]
+            psi = self.probabilityAmplitudes
+            nextPsi = [ complex.zero for _ in range(N) ]
             
             for x in range(N):
                 
@@ -309,20 +320,20 @@ class QuantumState:
                 coreX = X[x]
                 
                 try:
-                    leftWing = psi[x + 1]
-                    leftX = X[x + 1]
+                    leftWing = psi[x - 1]
+                    leftX = X[x - 1]
                 except:
                     leftWing = complex.zero
-                    leftX = complex.zero
+                    leftX = complex.two * X[x] - X[x - 1]
                 
                 try:
-                    rightWing = psi[x - 1]
+                    rightWing = psi[x + 1]
                     rightX = X[x + 1]
                 except:
                     leftWing = complex.zero
-                    rightX = complex.zero
+                    rightX = complex.two * X[x] - X[x - 1]
                 
-                deltaX2 = (leftX - coreX) * (coreX - rightX)
+                deltaX2 = (rightX - coreX) * (coreX - leftX)
                 
                 nextPsi[x] = (leftWing - complex.two * core + rightWing) / deltaX2
             
