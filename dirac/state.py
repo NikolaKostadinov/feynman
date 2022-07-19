@@ -2,7 +2,7 @@ import math
 import dirac.complex as complex
 from dirac.complex import Complex
 import dirac.complexmatrix as complexmatrix
-from dirac.complexmatrix import CompexMatrix
+from dirac.complexmatrix import ComplexMatrix
 import dirac.constants as constants
 import dirac.operator as operator
 from dirac.operator import Operator
@@ -63,7 +63,7 @@ class QuantumState:
             
         return self
     
-    def __init__(self, probabilityAmplitudes: list = [], basis: list = []):
+    def __init__(self, probabilityAmplitudes: list = [], basis: list = [], **kwargs):
         
         """
         Initiate a quantum state with given
@@ -71,12 +71,14 @@ class QuantumState:
         Example: \ ψ > = Σ probability amplitude . \ state >
         """
         
+        isNormalized = not kwargs.get('normalize', True)
+        
         if len(basis) == len(probabilityAmplitudes):
             
             self.basis = basis   
             self.probabilityAmplitudes = probabilityAmplitudes
         
-            self = self.normalize()
+            if not isNormalized: self = self.normalize()
             
         else: raise AttributeError()
     
@@ -120,6 +122,10 @@ class QuantumState:
         elif isinstance(probabilityAmplitude, QuantumState):
             return probabilityAmplitude.totalProbability()
         else: TypeError()
+    
+    def changeProbabilityAmplitudes(self, newProbabilityAmplitudes):
+        
+        self.probabilityAmplitudes = newProbabilityAmplitudes
     
     def conjugate(self):
         
@@ -204,7 +210,7 @@ class QuantumState:
         
         else: raise AttributeError()
         
-        return CompexMatrix(ket)
+        return ComplexMatrix(ket)
 
     def bra(self):
         
@@ -223,11 +229,11 @@ class QuantumState:
         Example: \ ψ > => operator \ ψ >
         """
         
-        if operator.isMatrix and self.ket().rows < 2:
+        if operator.isMatrix:
             
             probabilityAmplitudes = (operator.matrix @ self.ket()).matrix[0]
             
-            return QuantumState(probabilityAmplitudes, self.basis)
+            return QuantumState(probabilityAmplitudes, self.basis, normalize=False)
         
         elif operator.isComposed:
             
@@ -236,7 +242,56 @@ class QuantumState:
             
             return state
         
-        elif operator.type == 'scalar': return self.scale(operator.factor)
+        elif operator.type == 'factor': return self.scale(operator.factor)
+        
+        elif operator.type == 'd/dx':
+            
+            psi = self.probabilityAmplitudes
+            nextPsi = self.probabilityAmplitudes
+            X = [ complex.ToComplex(base) for base in self.basis ]
+            N = len(self)
+            
+            for x in range(N):
+                
+                try:
+                    deltaX = X[x + 1] - X[x]
+                    nextPsi[x] = psi[x + 1] - psi[x]
+                    nextPsi[x] /= deltaX
+                except: nextPsi[x] = complex.zero
+            
+            return QuantumState(nextPsi, self.basis, normalize=False)
+        
+        elif operator.type == 'd2/dx2': 
+            
+            psi = self.probabilityAmplitudes
+            nextPsi = self.probabilityAmplitudes
+            X = [ complex.ToComplex(base) for base in self.basis ]
+            N = len(self)
+            
+            for x in range(N):
+                
+                core = psi[x]
+                coreX = X[x]
+                
+                try:
+                    leftWing = psi[x + 1]
+                    leftX = X[x + 1]
+                except:
+                    leftWing = 0
+                    leftX = 0
+                
+                try:
+                    rightWing = psi[x - 1]
+                    rightX = X[x + 1]
+                except:
+                    leftWing = 0
+                    rightX = 0
+                
+                deltaX2 = (leftX - coreX) * (coreX - rightX)
+                nextPsi[x] = leftWing - complex.two * core + rightWing
+                nextPsi[x] /= deltaX2 
+            
+            return QuantumState(nextPsi, self.basis, normalize=False)
         
         else: raise ValueError()
    
@@ -256,3 +311,22 @@ class QuantumState:
         
         result = self.apply(timeEvolutionOperator)
         return QuantumState(result.probabilityAmplitudes, self.basis)
+    
+    def shrodingerEvolve(self, mass: float, potentialField: list):
+        
+        """
+        Solve Schrodinger's equation with given particle
+        mass and potential. Note that this returns the next
+        quantum state.\n
+        Example: \ ψ > => [ 1 - i/ℏ ( p²/2m + U ) Δt ] \ ψ >
+        """
+        
+        kineticEnergy = self.apply(operator.kinetic(mass)).ket()
+        potentialEnergy = self.apply(operator.potential(potentialField)).ket()
+        
+        totalEnergy = kineticEnergy + potentialEnergy
+        
+        deltaT = constants.delta
+        nextQuantumStateKet = self.ket() - totalEnergy.scale(constants.isubhbar * deltaT)
+        
+        return QuantumState(nextQuantumStateKet.matrix[0], self.basis)

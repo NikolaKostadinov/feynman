@@ -74,24 +74,36 @@ spinZ = pauliZ.scale(constants.halfhbar)
 hadamardMatrix = ComplexMatrix([ [complex.one, complex.one], [complex.one, -complex.one] ]).scale(complex.roothalf)
 hadamard = Operator(hadamardMatrix)
 
+xDerivative = Operator('d/dx')
+xSecondDerivative = Operator('d2/dx2')
 
-def position(positionBasis):
+def position(positionBasis: list):
     
     operator = Operator(complexmatrix.diagonal(positionBasis))
     operator.specialize('position')
     return operator
 
-momentum = Operator('momentum')
-momentumSquared = Operator('momentum squared')
-
-def kenetic(mass: float):
+def momentum():
     
-    operator = Operator([momentumSquared, Operator(complex.half / complex.ToComplex(mass))])
+    operator = Operator([xDerivative, Operator(-constants.ihbar)])
+    operator.specialize('momentum')
+    return operator
+
+def momentumSquared():
+    
+    operator = Operator([xSecondDerivative, Operator(-constants.hbarSquared)])
+    operator.specialize('momentum squared')
+    return operator
+
+def kinetic(mass: float):
+    
+    operator = Operator([momentumSquared(), Operator(complex.half / complex.ToComplex(mass))])
     operator.specialize('kenetic')
     return operator
 
 def potential(potentialField: list):
     
+    potentialField = [ complex.ToComplex(potentialValue) for potentialValue in potentialField ]
     potentialField = complexmatrix.diagonal(potentialField)
     operator = Operator(potentialField)
     operator.specialize('potential')
