@@ -27,7 +27,7 @@ class QuantumState:
             elif isinstance(probabilityAmplitude, QuantumState):
                 probability += probabilityAmplitude.totalProbability()
             else: TypeError()
-            
+        
         return probability
     
     def scale(self, factor: Complex):
@@ -58,7 +58,7 @@ class QuantumState:
         """
         
         normalizationFactor = complex.ToComplex(math.sqrt(normalizeTo / self.totalProbability())) 
-
+        
         self = self.scale(normalizationFactor)
             
         return self
@@ -190,12 +190,12 @@ class QuantumState:
         if isinstance(other, QuantumState): return self.probabilityAmplitudeOfColapse(other).congugateSquare() 
         else: raise AttributeError()
     
-    def ket(self):
+    def ketMatrix(self):
         
         """
         Return quantum state as a ket. Type of
         the returned ket is ComplexMatrix.\n
-        Example: \ ψ > = [ . . . ]
+        Example: \ ψ > = [[ . . . ]]
         """
         
         ket = []
@@ -212,15 +212,35 @@ class QuantumState:
         
         return ComplexMatrix(ket)
 
-    def bra(self):
+    def ket(self):
+        
+        """
+        Return quantum state as a ket. Type of
+        the returned ket is a list of Complex.\n
+        Example: \ ψ > = [ . . . ]
+        """
+        
+        return self.ketMatrix().matrix[0]
+
+    def braMatrix(self):
         
         """
         Return quantum state as a bra. Type of
         the returned bra is ComplexMatrix.\n
-        Example: < ψ / = [ ' ' ' ]
+        Example: < ψ / = [[ ' ' ' ]]
         """
         
-        return self.conjugate().ket().transpose()
+        return self.conjugate().ketMatrix().transpose()
+
+    def bra(self):
+        
+        """
+        Return quantum state as a ket. Type of
+        the returned ket is a list of Complex.\n
+        Example: \ ψ > = [ . . . ]
+        """
+        
+        return self.braMatrix().matrix[0]
 
     def apply(self, operator: Operator):
         
@@ -231,7 +251,7 @@ class QuantumState:
         
         if operator.isMatrix:
             
-            probabilityAmplitudes = (operator.matrix @ self.ket()).matrix[0]
+            probabilityAmplitudes = (operator.matrix @ self.ketMatrix()).matrix[0]
             
             return QuantumState(probabilityAmplitudes, self.basis, normalize=False)
         
@@ -244,20 +264,34 @@ class QuantumState:
         
         elif operator.type == 'factor': return self.scale(operator.factor)
         
+        elif operator.type == 'position':
+            
+            basis = [ complex.ToComplex(base) for base in self.basis ]
+            matrixOperator = complexmatrix.diagonal(basis)
+            return self.apply(Operator(matrixOperator))
+            
+        
         elif operator.type == 'd/dx':
             
             psi = self.probabilityAmplitudes
             nextPsi = self.probabilityAmplitudes
             X = [ complex.ToComplex(base) for base in self.basis ]
             N = len(self)
-            
+
             for x in range(N):
                 
+                core = psi[x]
+                coreX = X[x]
+                
                 try:
-                    deltaX = X[x + 1] - X[x]
-                    nextPsi[x] = psi[x + 1] - psi[x]
-                    nextPsi[x] /= deltaX
-                except: nextPsi[x] = complex.zero
+                    next = psi[x + 1]
+                    nextX = X[x + 1]
+                except:
+                    next = complex.zero
+                    nextX = complex.zero
+
+                deltaX = nextX - coreX
+                nextPsi[x] = (next - core) / deltaX
             
             return QuantumState(nextPsi, self.basis, normalize=False)
         
@@ -277,23 +311,42 @@ class QuantumState:
                     leftWing = psi[x + 1]
                     leftX = X[x + 1]
                 except:
-                    leftWing = 0
-                    leftX = 0
+                    leftWing = complex.zero
+                    leftX = complex.zero
                 
                 try:
                     rightWing = psi[x - 1]
                     rightX = X[x + 1]
                 except:
-                    leftWing = 0
-                    rightX = 0
+                    leftWing = complex.zero
+                    rightX = complex.zero
                 
                 deltaX2 = (leftX - coreX) * (coreX - rightX)
+                leftWing /= deltaX2
+                core /= deltaX2
+                rightWing /= deltaX2
+                
                 nextPsi[x] = leftWing - complex.two * core + rightWing
-                nextPsi[x] /= deltaX2 
             
             return QuantumState(nextPsi, self.basis, normalize=False)
         
         else: raise ValueError()
+        
+    def expectedValue(self, operator: Operator):
+        
+        """
+        Calculate the expected value
+        of a quantum operator.\n
+        Example: < operator > = < ψ / operator \ ψ >
+        """
+   
+        appliedKet = self.apply(operator).ket()
+        bra = self.bra()
+        
+        expected = complex.zero
+        for ketAmplitude, braAmplitude in zip(appliedKet, bra): expected += ketAmplitude * braAmplitude
+        
+        return expected
    
     def timeEvolve(self, hamiltonian: Operator):
         
@@ -321,12 +374,12 @@ class QuantumState:
         Example: \ ψ > => [ 1 - i/ℏ ( p²/2m + U ) Δt ] \ ψ >
         """
         
-        kineticEnergy = self.apply(operator.kinetic(mass)).ket()
-        potentialEnergy = self.apply(operator.potential(potentialField)).ket()
+        kineticEnergy = self.apply(operator.kinetic(mass)).ketMatrix()
+        potentialEnergy = self.apply(operator.potential(potentialField)).ketMatrix()
         
         totalEnergy = kineticEnergy + potentialEnergy
         
         deltaT = constants.delta
-        nextQuantumStateKet = self.ket() - totalEnergy.scale(constants.isubhbar * deltaT)
+        nextQuantumStateKet = self.ketMatrix() - totalEnergy.scale(constants.isubhbar * deltaT)
         
         return QuantumState(nextQuantumStateKet.matrix[0], self.basis)

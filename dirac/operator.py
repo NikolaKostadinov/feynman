@@ -1,4 +1,5 @@
 from ast import operator
+from turtle import position
 import dirac.complex as complex
 from dirac.complex import Complex
 import dirac.complexmatrix as complexmatrix
@@ -74,14 +75,10 @@ spinZ = pauliZ.scale(constants.halfhbar)
 hadamardMatrix = ComplexMatrix([ [complex.one, complex.one], [complex.one, -complex.one] ]).scale(complex.roothalf)
 hadamard = Operator(hadamardMatrix)
 
+position = Operator('position')
+
 xDerivative = Operator('d/dx')
 xSecondDerivative = Operator('d2/dx2')
-
-def position(positionBasis: list):
-    
-    operator = Operator(complexmatrix.diagonal(positionBasis))
-    operator.specialize('position')
-    return operator
 
 def momentum():
     
@@ -97,7 +94,7 @@ def momentumSquared():
 
 def kinetic(mass: float):
     
-    operator = Operator([momentumSquared(), Operator(complex.half / complex.ToComplex(mass))])
+    operator = Operator([momentum(), momentum(), Operator(complex.half / complex.ToComplex(mass))])
     operator.specialize('kenetic')
     return operator
 
