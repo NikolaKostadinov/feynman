@@ -1,8 +1,11 @@
 import math
+from decimal import Decimal
 
 def toPolar(x, y):
     
-    r = math.sqrt( x**2 + y**2 )
+    X = Decimal(x)
+    Y = Decimal(y) 
+    r = math.sqrt( X**2 + Y**2 )
     theta = math.atan2(y, x)
     
     return r, theta
