@@ -292,17 +292,16 @@ class QuantumState:
                     leftX = X[x - 1]
                 except:
                     leftWing = complex.zero
-                    leftX = complex.zero
+                    leftX = complex.two * X[x + 1] - X[x + 2]
                     
                 try:
                     rightWing = psi[x + 1]
                     rightX = X[x + 1]
                 except:
                     leftWing = complex.zero
-                    rightX = complex.zero
+                    rightX = complex.two * X[x - 1] - X[x - 2]
 
                 deltaX = rightX - leftX
-
                 nextPsi[x] = (rightWing - leftWing) / deltaX
             
             return QuantumState(nextPsi, self.basis, normalize=False)
@@ -324,14 +323,14 @@ class QuantumState:
                     leftX = X[x - 1]
                 except:
                     leftWing = complex.zero
-                    leftX = complex.two * X[x] - X[x - 1]
+                    leftX = complex.two * X[x + 1] - X[x + 2]
                 
                 try:
                     rightWing = psi[x + 1]
                     rightX = X[x + 1]
                 except:
                     leftWing = complex.zero
-                    rightX = complex.two * X[x] - X[x - 1]
+                    rightX = complex.two * X[x - 1] - X[x - 2]
                 
                 deltaX2 = (rightX - coreX) * (coreX - leftX)
                 

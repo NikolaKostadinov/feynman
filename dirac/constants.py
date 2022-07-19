@@ -8,5 +8,5 @@ halfhbar = complex.ToComplex(.5 * HBAR)
 ihbar = complex.i * hbar
 isubhbar = complex.i / hbar
 
-DELTA = sys.float_info.min
+DELTA = .001 #sys.float_info.min
 delta = complex.ToComplex(DELTA)
