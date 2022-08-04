@@ -14,16 +14,16 @@ export const testData = (request, response) => {
 
             case '1dsine':
 
-                const X = linear(dx, parseFloat(start), end);
-                const Y = X.map(waveNormed(length, start));
+                var X = linear(dx, parseFloat(start), end);
+                var Y = X.map(waveNormed(length, start));
 
                 response.status(200).json({ x: X, f: Y });
                 break;
             
             case '1dgauss':
 
-                const X = linear(dx, parseFloat(start), end);
-                const Y = X.map(gaussian(start + .5 * length, dev));
+                var X = linear(dx, parseFloat(start), end);
+                var Y = X.map(gaussian(start + .5 * length, dev));
     
                 response.status(200).json({ x: X, f: Y });
                 break;
