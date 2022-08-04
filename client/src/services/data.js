@@ -1,5 +1,5 @@
 import axios from 'axios'
-const baseUrl = 'https://quantum-server-app.herokuapp.com/dev/testdata/?'
+const baseUrl = 'https://quantum-server-app.herokuapp.com/dev/testdata/'
 
 const getUpTo100 = () => {
     const request = axios.get(`https://quantum-server-app.herokuapp.com/dev/testdata/?set=1dsine&start=0&end=10&dx=1`)
