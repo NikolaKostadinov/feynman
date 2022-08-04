@@ -12,7 +12,7 @@ const LineChart = ({ dataX, dataF, labelText }) => {
                 datasets: [
                     {
                     label: {labelText},
-                    data: dataF,
+                    data: dataF.map(data => (data*100).toFixed(3)),
                     backgroundColor: 'aqua',
                     borderColor: 'aqua',
                     borderWidth: 3
