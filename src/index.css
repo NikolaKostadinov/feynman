@@ -1,0 +1,73 @@
+
+body,
+h2,
+p {
+  margin: 0;
+}
+
+.split {
+  display: flex;
+  flex-direction: row;
+}
+
+@media (min-width: 40em) {
+  .split {
+    flex-direction: row;
+  }
+
+  .split > * {
+    flex-basis: 100%;
+  }
+
+  .App > * + * {
+    padding-left: 2em;
+  }
+
+}
+
+h1 {
+  margin: 2vw;
+}
+
+h1 {
+  font-size: 4vw;
+}
+
+.sideBarDiv {
+  width: 24vw;
+  font-size: 2.5vw;
+}
+
+#leftBar {
+  text-align: left;
+  margin: 2vw 2vw 0vw 2vw;
+}
+
+#rightBar {
+  text-align: right;
+}
+
+#leftBar,
+#rightBar,
+.chartDiv {
+  margin: 2%;
+}
+
+img {
+  width: 20vw;
+  height: 20vw;
+}
+
+.chartDiv :only-child{
+  width: 34vw;
+  max-width: 34vw;
+  height: 34vw;
+  max-height: 34vw;
+  size: 100%;
+}
+
+.chartDiv {
+  padding-left: 5vw;
+  padding-right: 5vw;
+  align-items: center;
+}
