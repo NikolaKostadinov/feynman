@@ -8,7 +8,7 @@ const getUpTo100 = () => {
 }
 
 const getWanted = (set, start, end, dx) => {
-    const request = axios.get(`${baseUrl}set=${set}dsine&start=${start}&end=${end}&dx=${dx}`)
+    const request = axios.get(baseUrl, { params: { set, start, end, dx } })
 
     return request.then(response => response.data)
 }
