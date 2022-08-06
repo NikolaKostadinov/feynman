@@ -3,8 +3,10 @@ export const main = (request, response) => {
     try {
 
         const serverResponse = {
-            message: 'Welcome to the web server.',
-            serverStatus: 'working'
+            message: 'Welcome to the Feynman Web Server.',
+            from: 'Feynman',
+            serverStatus: 'working',
+            git: 'https://github.com/NikolaKostadinov/feynman'
         };
 
         response.status(200).json(serverResponse);

@@ -7,6 +7,7 @@ import chalk from 'chalk';
 
 import serverRouter from './routes/server.routes.js';
 import devRouter from './routes/dev.routes.js';
+import diracRouter from './routes/dirac.routes.js';
 
 import { none } from './controllers/server.controllers.js';
 
@@ -29,8 +30,9 @@ app.use(helmet());
 
 app.use('/', serverRouter);
 app.use('/dev', devRouter);
+app.use('/dirac', diracRouter);
 app.use('*', none);
 
 app.listen(PORT, () => {
-    console.log(chalk.green(`🟢 WEB SERVER RUNNING ON PORT:${PORT}`));
+    console.log(chalk.green(`| F > FEYNMAN WEB SERVER RUNNING ON PORT:${PORT}`));
 });
